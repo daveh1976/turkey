@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Dog Adventure</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        .anxiety-meter {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 200px;
+            height: 20px;
+            background-color: red;
+        }
+        .anxiety-label {
+            position: absolute;
+            top: 10px;
+            left: 220px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="anxiety-meter" id="anxietyBar"></div>
+    <div class="anxiety-label">Anxiety Meter</div>
+
+    <!-- Bark Sound -->
+    <audio id="barkSound" src="path_to_your_bark_sound.m4a"></audio> <!-- Replace with your actual m4a file path -->
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Game Scripts -->
+    <script src="js/characters.js"></script>
+    <script src="js/environment.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
