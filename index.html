@@ -3,268 +3,620 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DEWLGS - Radar Platform</title>
+    <title>DEWLGS - Radar Parametric Capture</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+            margin: 0;
+            padding: 20px;
+            color: #333;
         }
+
         h1 {
+            text-align: center;
+            color: #fff;
             margin-bottom: 20px;
         }
-        #searchInput {
-            margin-bottom: 20px;
-            padding: 10px;
-            font-size: 16px;
-        }
-        .buttons {
-            margin-bottom: 20px;
-        }
-        .buttons button {
-            margin-right: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-        .radar-table th, .platform-table th {
-            cursor: pointer;
-        }
-        .radar-table th.asc::after, .platform-table th.asc::after {
-            content: " ↑";
-        }
-        .radar-table th.desc::after, .platform-table th.desc::after {
-            content: " ↓";
-        }
-        .error {
-            border: 1px solid red;
-        }
-        .flag-icon {
-            width: 24px;
-            height: auto;
-        }
-        .radar-icon {
-            width: 24px;
-            height: auto;
-        }
-        .ship-silhouette {
-            width: 100px;
-            height: 30px;
-            background: black;
-            position: relative;
+
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
         }
-        /* Simple ship silhouettes */
-        .destroyer::before {
-            content: "";
-            position: absolute;
+
+        .parametric-form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .parametric-form label {
+            display: block;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .parametric-form input[type="text"],
+        .parametric-form input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        .parametric-form button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            grid-column: span 2;
+        }
+
+        .parametric-form button:hover {
+            background: #45a049;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .button-container button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: #2196F3;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .button-container button:hover {
+            background: #1976D2;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        td[contenteditable="true"]:focus {
+            background-color: #e9f0ff;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .radar-details {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .radar-details h3 {
+            color: #333;
+        }
+
+        .radar-details p {
+            color: #333;
+        }
+
+        .delete-btn, .add-subrow-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .add-subrow-btn {
+            background: #4CAF50;
+        }
+
+        .add-subrow-btn:hover {
+            background: #45a049;
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .error {
+            background-color: #f8d7da;
+        }
+
+        .subrow {
+            background-color: #f9f9f9;
+            padding-left: 40px;
+        }
+
+        .subrow th, .subrow td {
+            padding: 8px;
+        }
+
+        .radar-icon {
             width: 20px;
-            height: 10px;
-            background: black;
-            top: -10px;
-            left: 10px;
-        }
-        .frigate::before {
-            content: "";
-            position: absolute;
-            width: 30px;
-            height: 8px;
-            background: black;
-            top: -8px;
-            left: 5px;
-        }
-        .aircraft-carrier::before {
-            content: "";
-            position: absolute;
-            width: 60px;
             height: 20px;
-            background: black;
-            top: -12px;
-            left: 20px;
         }
-        .submarine {
-            border-radius: 15px;
+
+        .flag-icon {
+            width: 30px;
+            height: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>DEWLGS</h1>
+    <h1>DEWLGS - Radar Parametric Capture</h1>
     
-    <input type="text" id="searchInput" placeholder="Search...">
-    
-    <div class="buttons">
-        <button onclick="addRadar()">Add Radar</button>
-        <button onclick="commitChanges()">Commit Changes</button>
-        <button onclick="exportToXML()">Export to XML</button>
-        <button onclick="exportToJSON()">Export to JSON</button>
+    <div class="container">
+        <!-- Buttons at the top -->
+        <div class="button-container">
+            <button class="commit-btn" onclick="commitChanges()">Commit Changes</button>
+            <button class="export-btn" onclick="exportToXML()">Export Data as XML</button>
+            <button class="export-json-btn" onclick="exportToJSON()">Export Data as JSON</button>
+        </div>
+
+        <div class="parametric-form">
+            <label for="param1">RF Frequency (MHz):</label>
+            <input type="number" id="param1" placeholder="Value for RF Frequency">
+
+            <label for="param2">Gain (dBi):</label>
+            <input type="number" id="param2" placeholder="Value for Gain">
+
+            <label for="param3">PRI (µs):</label>
+            <input type="number" id="param3" placeholder="Value for PRI">
+
+            <label for="param4">Pulse Width (µs):</label>
+            <input type="number" id="param4" placeholder="Value for Pulse Width">
+
+            <label for="param5">ELNOT:</label>
+            <input type="text" id="param5" placeholder="Value for ELNOT">
+
+            <label for="param6">Bandwidth (MHz):</label>
+            <input type="number" id="param6" placeholder="Value for Bandwidth">
+
+            <label for="param7">Azimuth Beamwidth (Degrees):</label>
+            <input type="number" id="param7" placeholder="Value for Azimuth Beamwidth">
+
+            <label for="param8">Elevation Beamwidth (Degrees):</label>
+            <input type="number" id="param8" placeholder="Value for Elevation Beamwidth">
+
+            <label for="param9">Peak Power (kW):</label>
+            <input type="number" id="param9" placeholder="Value for Peak Power">
+
+            <label for="param10">Radar Cross Section (m²):</label>
+            <input type="number" id="param10" placeholder="Value for Radar Cross Section">
+
+            <button onclick="addRadar()">Add Radar</button>
+        </div>
+
+        <table id="radarTable">
+            <thead>
+                <tr>
+                    <th>Radar Icon</th>
+                    <th>Radar ID</th>
+                    <th>RF Frequency (MHz)</th>
+                    <th>Gain (dBi)</th>
+                    <th>PRI (µs)</th>
+                    <th>Pulse Width (µs)</th>
+                    <th>ELNOT</th>
+                    <th>Bandwidth (MHz)</th>
+                    <th>Azimuth Beamwidth (°)</th>
+                    <th>Elevation Beamwidth (°)</th>
+                    <th>Peak Power (kW)</th>
+                    <th>Radar Cross Section (m²)</th>
+                    <th>Add Subrow</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="radarTableBody">
+                <!-- Prepopulated Rows -->
+            </tbody>
+        </table>
+
+        <h2>Platform Table (Ship Platforms)</h2>
+        <table id="platformTable">
+            <thead>
+                <tr>
+                    <th>Flag</th>
+                    <th>Country</th>
+                    <th>Platform Name</th>
+                    <th>Radar ID(s)</th>
+                    <th>Gun Size (mm)</th>
+                    <th>Weight (tons)</th>
+                    <th>Length (m)</th>
+                    <th>Crew Size</th>
+                    <th>Max Speed (knots)</th>
+                </tr>
+            </thead>
+            <tbody id="platformTableBody">
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/usa.png" class="flag-icon" alt="USA Flag"></td>
+                    <td>USA</td>
+                    <td>USS Arleigh Burke (DDG-51)</td>
+                    <td>1, 2</td>
+                    <td>127</td>
+                    <td>9,800</td>
+                    <td>155</td>
+                    <td>330</td>
+                    <td>30</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/canada.png" class="flag-icon" alt="Canada Flag"></td>
+                    <td>Canada</td>
+                    <td>HMCS Halifax</td>
+                    <td>4</td>
+                    <td>57</td>
+                    <td>4,770</td>
+                    <td>134</td>
+                    <td>225</td>
+                    <td>29</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/new-zealand.png" class="flag-icon" alt="New Zealand Flag"></td>
+                    <td>New Zealand</td>
+                    <td>HMNZS Te Kaha</td>
+                    <td>5</td>
+                    <td>57</td>
+                    <td>3,600</td>
+                    <td>118</td>
+                    <td>170</td>
+                    <td>27</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/united-kingdom.png" class="flag-icon" alt="UK Flag"></td>
+                    <td>UK</td>
+                    <td>HMS Daring (D32)</td>
+                    <td>3</td>
+                    <td>113</td>
+                    <td>8,500</td>
+                    <td>152</td>
+                    <td>190</td>
+                    <td>29</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/germany.png" class="flag-icon" alt="Germany Flag"></td>
+                    <td>Germany</td>
+                    <td>FGS Sachsen</td>
+                    <td>2</td>
+                    <td>76</td>
+                    <td>5,690</td>
+                    <td>143</td>
+                    <td>230</td>
+                    <td>28</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/france.png" class="flag-icon" alt="France Flag"></td>
+                    <td>France</td>
+                    <td>FS Forbin</td>
+                    <td>6</td>
+                    <td>100</td>
+                    <td>7,050</td>
+                    <td>153</td>
+                    <td>220</td>
+                    <td>30</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/australia.png" class="flag-icon" alt="Australia Flag"></td>
+                    <td>Australia</td>
+                    <td>HMAS Hobart</td>
+                    <td>7</td>
+                    <td>127</td>
+                    <td>7,000</td>
+                    <td>146</td>
+                    <td>200</td>
+                    <td>28</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/japan.png" class="flag-icon" alt="Japan Flag"></td>
+                    <td>Japan</td>
+                    <td>JS Kongo</td>
+                    <td>8</td>
+                    <td>127</td>
+                    <td>7,250</td>
+                    <td>161</td>
+                    <td>300</td>
+                    <td>30</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/italy.png" class="flag-icon" alt="Italy Flag"></td>
+                    <td>Italy</td>
+                    <td>ITS Caio Duilio</td>
+                    <td>9</td>
+                    <td>76</td>
+                    <td>5,400</td>
+                    <td>152</td>
+                    <td>200</td>
+                    <td>29</td>
+                </tr>
+                <tr>
+                    <td><img src="https://img.icons8.com/color/48/000000/spain.png" class="flag-icon" alt="Spain Flag"></td>
+                    <td>Spain</td>
+                    <td>SPS Alvaro de Bazan</td>
+                    <td>10</td>
+                    <td>127</td>
+                    <td>6,400</td>
+                    <td>147</td>
+                    <td>250</td>
+                    <td>29</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <h2>Platforms</h2>
-    <table class="platform-table">
-        <thead>
-            <tr>
-                <th>Flag</th>
-                <th>Country</th>
-                <th>Platform Name</th>
-                <th>Platform Type</th>
-                <th>Radar IDs</th>
-                <th>Gun Size</th>
-                <th>Weight</th>
-                <th>Length</th>
-                <th>Crew Size</th>
-                <th>Max Speed</th>
-                <th>Silhouette</th>
-            </tr>
-        </thead>
-        <tbody id="platformTableBody">
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/usa.png" class="flag-icon" alt="USA Flag"></td>
-                <td>USA</td>
-                <td>Arleigh Burke (DDG-51)</td>
-                <td>Destroyer</td>
-                <td>1, 2</td>
-                <td>127 mm</td>
-                <td>9,200 tons</td>
-                <td>509 ft</td>
-                <td>280</td>
-                <td>30 knots</td>
-                <td><div class="ship-silhouette destroyer"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/canada.png" class="flag-icon" alt="Canada Flag"></td>
-                <td>Canada</td>
-                <td>HMCS Halifax</td>
-                <td>Frigate</td>
-                <td>3, 4</td>
-                <td>57 mm</td>
-                <td>4,770 tons</td>
-                <td>134 ft</td>
-                <td>225</td>
-                <td>29 knots</td>
-                <td><div class="ship-silhouette frigate"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/new-zealand.png" class="flag-icon" alt="New Zealand Flag"></td>
-                <td>New Zealand</td>
-                <td>HMNZS Te Kaha</td>
-                <td>Frigate</td>
-                <td>5</td>
-                <td>57 mm</td>
-                <td>3,600 tons</td>
-                <td>118 ft</td>
-                <td>170</td>
-                <td>27 knots</td>
-                <td><div class="ship-silhouette frigate"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/united-kingdom.png" class="flag-icon" alt="UK Flag"></td>
-                <td>UK</td>
-                <td>HMS Daring (D32)</td>
-                <td>Destroyer</td>
-                <td>6</td>
-                <td>114 mm</td>
-                <td>8,500 tons</td>
-                <td>152 ft</td>
-                <td>190</td>
-                <td>29 knots</td>
-                <td><div class="ship-silhouette destroyer"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/germany.png" class="flag-icon" alt="Germany Flag"></td>
-                <td>Germany</td>
-                <td>FGS Sachsen</td>
-                <td>Frigate</td>
-                <td>7</td>
-                <td>76 mm</td>
-                <td>5,690 tons</td>
-                <td>143 ft</td>
-                <td>230</td>
-                <td>28 knots</td>
-                <td><div class="ship-silhouette frigate"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/france.png" class="flag-icon" alt="France Flag"></td>
-                <td>France</td>
-                <td>FS Forbin</td>
-                <td>Destroyer</td>
-                <td>8</td>
-                <td>100 mm</td>
-                <td>7,050 tons</td>
-                <td>153 ft</td>
-                <td>220</td>
-                <td>30 knots</td>
-                <td><div class="ship-silhouette destroyer"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/australia.png" class="flag-icon" alt="Australia Flag"></td>
-                <td>Australia</td>
-                <td>HMAS Hobart</td>
-                <td>Destroyer</td>
-                <td>9</td>
-                <td>127 mm</td>
-                <td>7,000 tons</td>
-                <td>146 ft</td>
-                <td>200</td>
-                <td>28 knots</td>
-                <td><div class="ship-silhouette destroyer"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/japan.png" class="flag-icon" alt="Japan Flag"></td>
-                <td>Japan</td>
-                <td>JS Kongo</td>
-                <td>Destroyer</td>
-                <td>10</td>
-                <td>127 mm</td>
-                <td>7,250 tons</td>
-                <td>161 ft</td>
-                <td>300</td>
-                <td>30 knots</td>
-                <td><div class="ship-silhouette destroyer"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/italy.png" class="flag-icon" alt="Italy Flag"></td>
-                <td>Italy</td>
-                <td>ITS Caio Duilio</td>
-                <td>Destroyer</td>
-                <td>11</td>
-                <td>76 mm</td>
-                <td>5,400 tons</td>
-                <td>152 ft</td>
-                <td>200</td>
-                <td>29 knots</td>
-                <td><div class="ship-silhouette destroyer"></div></td>
-            </tr>
-            <tr>
-                <td><img src="https://img.icons8.com/color/48/000000/spain.png" class="flag-icon" alt="Spain Flag"></td>
-                <td>Spain</td>
-                <td>SPS Alvaro de Bazan</td>
-                <td>Frigate</td>
-                <td>12</td>
-                <td>127 mm</td>
-                <td>6,400 tons</td>
-                <td>147 ft</td>
-                <td>250</td>
-                <td>29 knots</td>
-                <td><div class="ship-silhouette frigate"></div></td>
-            </tr>
-        </tbody>
-    </table>
-
     <script>
+        let radarCount = 10;
+        let radarDatabase = [];  // In-memory database to hold radar data
+        let committedRadarDatabase = [];  // In-memory database to hold committed changes
+        let radarSubrows = {}; // Object to store subrows for each radar
+
+        const radarTableBody = document.getElementById('radarTableBody');
+
+        const sampleRadars = [
+            { id: 1, rfFrequency: 5000, gain: 30, pri: 1200, pulseWidth: 3, elnot: "E12345", bandwidth: 20, azimuthBeamwidth: 1.2, elevationBeamwidth: 1.5, peakPower: 200, rcs: 5 },
+            { id: 2, rfFrequency: 3400, gain: 25, pri: 800, pulseWidth: 2, elnot: "E23456", bandwidth: 15, azimuthBeamwidth: 2.5, elevationBeamwidth: 2.2, peakPower: 150, rcs: 10 },
+            { id: 3, rfFrequency: 7800, gain: 35, pri: 1500, pulseWidth: 4, elnot: "E34567", bandwidth: 25, azimuthBeamwidth: 1.0, elevationBeamwidth: 1.0, peakPower: 250, rcs: 8 },
+            { id: 4, rfFrequency: 9600, gain: 40, pri: 2000, pulseWidth: 6, elnot: "E45678", bandwidth: 50, azimuthBeamwidth: 0.8, elevationBeamwidth: 1.3, peakPower: 300, rcs: 15 },
+            { id: 5, rfFrequency: 2900, gain: 28, pri: 700, pulseWidth: 2.5, elnot: "E56789", bandwidth: 10, azimuthBeamwidth: 3.0, elevationBeamwidth: 2.0, peakPower: 180, rcs: 12 },
+        ];
+
+        // Prepopulate with sample radars and add to radarDatabase
+        sampleRadars.forEach(radar => {
+            radarDatabase.push(radar);
+            radarSubrows[radar.id] = []; // Initialize subrow array for each radar
+            addRowToTable(radar);
+        });
+
+        function addRowToTable(radar) {
+            const row = document.createElement('tr');
+            row.id = `radar-${radar.id}`;
+            row.innerHTML = `
+                <td><img src="https://img.icons8.com/ios-filled/50/000000/radar.png" class="radar-icon" alt="Radar Icon"></td>
+                <td contenteditable="false">${radar.id}</td>
+                <td contenteditable="true" data-type="number">${radar.rfFrequency}</td>
+                <td contenteditable="true" data-type="number">${radar.gain}</td>
+                <td contenteditable="true" data-type="number">${radar.pri}</td>
+                <td contenteditable="true" data-type="number">${radar.pulseWidth}</td>
+                <td contenteditable="true" data-type="text">${radar.elnot}</td>
+                <td contenteditable="true" data-type="number">${radar.bandwidth}</td>
+                <td contenteditable="true" data-type="number">${radar.azimuthBeamwidth}</td>
+                <td contenteditable="true" data-type="number">${radar.elevationBeamwidth}</td>
+                <td contenteditable="true" data-type="number">${radar.peakPower}</td>
+                <td contenteditable="true" data-type="number">${radar.rcs}</td>
+                <td><button class="add-subrow-btn" onclick="addSubrow(${radar.id})">+</button></td>
+                <td><button class="delete-btn" onclick="deleteRow(this, ${radar.id})">Delete</button></td>
+            `;
+            radarTableBody.appendChild(row);
+
+            // Add validation listeners for editable cells
+            addValidationToCells(row);
+        }
+
+        function deleteRow(button, radarId) {
+            const row = button.parentNode.parentNode;
+            radarTableBody.removeChild(row);
+
+            // Remove from the radarDatabase
+            radarDatabase = radarDatabase.filter(radar => radar.id !== radarId);
+
+            // Remove subrows if any
+            const subrows = document.querySelectorAll(`.subrow[data-parent="${radarId}"]`);
+            subrows.forEach(subrow => subrow.remove());
+
+            // Remove subrows from the radarSubrows object
+            delete radarSubrows[radarId];
+        }
+
+        function addRadar() {
+            radarCount++;
+            const radar = {
+                id: radarCount,
+                rfFrequency: document.getElementById('param1').value || 0,
+                gain: document.getElementById('param2').value || 0,
+                pri: document.getElementById('param3').value || 0,
+                pulseWidth: document.getElementById('param4').value || 0,
+                elnot: document.getElementById('param5').value || 'Unknown',
+                bandwidth: document.getElementById('param6').value || 0,
+                azimuthBeamwidth: document.getElementById('param7').value || 0,
+                elevationBeamwidth: document.getElementById('param8').value || 0,
+                peakPower: document.getElementById('param9').value || 0,
+                rcs: document.getElementById('param10').value || 0,
+            };
+
+            radarDatabase.push(radar); // Add to in-memory database
+            radarSubrows[radar.id] = []; // Initialize subrow array for this radar
+            addRowToTable(radar); // Add to the UI table
+        }
+
+        function addSubrow(radarId) {
+            const subrow = document.createElement('tr');
+            subrow.classList.add('subrow');
+            subrow.setAttribute('data-parent', radarId);  // Link subrow to the parent radar row
+            subrow.innerHTML = `
+                <td colspan="14">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td>Pulse Amplitude</td>
+                            <td><input type="number" placeholder="Pulse Amplitude" class="pulse-amplitude"></td>
+                            <td>Pulse Duration</td>
+                            <td><input type="number" placeholder="Pulse Duration" class="pulse-duration"></td>
+                            <td>Pulse Phase</td>
+                            <td><input type="number" placeholder="Pulse Phase" class="pulse-phase"></td>
+                            <td>Pulse Modulation</td>
+                            <td><input type="text" placeholder="Pulse Modulation" class="pulse-modulation"></td>
+                            <td>Pulse Interval</td>
+                            <td><input type="number" placeholder="Pulse Interval" class="pulse-interval"></td>
+                        </tr>
+                    </table>
+                </td>
+            `;
+
+            const radarRow = document.getElementById(`radar-${radarId}`);
+            radarRow.insertAdjacentElement('afterend', subrow);
+
+            // Save subrow data for this radar
+            radarSubrows[radarId].push({
+                pulseAmplitude: 0,
+                pulseDuration: 0,
+                pulsePhase: 0,
+                pulseModulation: '',
+                pulseInterval: 0
+            });
+
+            // Add change event listeners to update subrow data
+            const inputs = subrow.querySelectorAll('input');
+            inputs.forEach((input, index) => {
+                input.addEventListener('change', (event) => {
+                    const value = event.target.value;
+                    const subrowIndex = radarSubrows[radarId].length - 1;
+                    const field = input.classList[0].replace('pulse-', ''); // e.g., pulse-amplitude => amplitude
+                    radarSubrows[radarId][subrowIndex][field] = value;
+                });
+            });
+        }
+
+        function addValidationToCells(row) {
+            const cells = row.querySelectorAll('[contenteditable="true"]');
+            cells.forEach(cell => {
+                cell.addEventListener('input', function() {
+                    const type = cell.getAttribute('data-type');
+                    const value = cell.innerText;
+
+                    if (type === 'number' && isNaN(value)) {
+                        cell.classList.add('error');
+                    } else {
+                        cell.classList.remove('error');
+                    }
+                });
+            });
+        }
+
         function commitChanges() {
+            committedRadarDatabase = [...radarDatabase]; // Clone the current radar database
+            console.log('Committed Radar Database:', committedRadarDatabase);
             alert('Changes have been committed successfully!');
         }
 
         function exportToXML() {
-            alert('Export to XML initiated.');
+            let xmlData = '<?xml version="1.0" encoding="UTF-8"?>\n<radarData>\n';
+
+            committedRadarDatabase.forEach(radar => {
+                xmlData += `  <radar>\n`;
+                xmlData += `    <id>${radar.id}</id>\n`;
+                xmlData += `    <rfFrequency>${radar.rfFrequency}</rfFrequency>\n`;
+                xmlData += `    <gain>${radar.gain}</gain>\n`;
+                xmlData += `    <pri>${radar.pri}</pri>\n`;
+                xmlData += `    <pulseWidth>${radar.pulseWidth}</pulseWidth>\n`;
+                xmlData += `    <elnot>${radar.elnot}</elnot>\n`;
+                xmlData += `    <bandwidth>${radar.bandwidth}</bandwidth>\n`;
+                xmlData += `    <azimuthBeamwidth>${radar.azimuthBeamwidth}</azimuthBeamwidth>\n`;
+                xmlData += `    <elevationBeamwidth>${radar.elevationBeamwidth}</elevationBeamwidth>\n`;
+                xmlData += `    <peakPower>${radar.peakPower}</peakPower>\n`;
+                xmlData += `    <rcs>${radar.rcs}</rcs>\n`;
+
+                if (radarSubrows[radar.id] && radarSubrows[radar.id].length > 0) {
+                    xmlData += `    <subrows>\n`;
+                    radarSubrows[radar.id].forEach(subrow => {
+                        xmlData += `      <subrow>\n`;
+                        xmlData += `        <pulseAmplitude>${subrow.pulseAmplitude}</pulseAmplitude>\n`;
+                        xmlData += `        <pulseDuration>${subrow.pulseDuration}</pulseDuration>\n`;
+                        xmlData += `        <pulsePhase>${subrow.pulsePhase}</pulsePhase>\n`;
+                        xmlData += `        <pulseModulation>${subrow.pulseModulation}</pulseModulation>\n`;
+                        xmlData += `        <pulseInterval>${subrow.pulseInterval}</pulseInterval>\n`;
+                        xmlData += `      </subrow>\n`;
+                    });
+                    xmlData += `    </subrows>\n`;
+                }
+
+                xmlData += `  </radar>\n`;
+            });
+
+            xmlData += '  <platforms>\n';
+            const platformTableRows = document.querySelectorAll('#platformTableBody tr');
+            platformTableRows.forEach(row => {
+                const country = row.cells[1].innerText;
+                const platformName = row.cells[2].innerText;
+                const radarIds = row.cells[3].innerText;
+                const gunSize = row.cells[4].innerText;
+                const weight = row.cells[5].innerText;
+                const length = row.cells[6].innerText;
+                const crewSize = row.cells[7].innerText;
+                const maxSpeed = row.cells[8].innerText;
+
+                xmlData += `    <platform>\n`;
+                xmlData += `      <country>${country}</country>\n`;
+                xmlData += `      <platformName>${platformName}</platformName>\n`;
+                xmlData += `      <radarIds>${radarIds}</radarIds>\n`;
+                xmlData += `      <gunSize>${gunSize}</gunSize>\n`;
+                xmlData += `      <weight>${weight}</weight>\n`;
+                xmlData += `      <length>${length}</length>\n`;
+                xmlData += `      <crewSize>${crewSize}</crewSize>\n`;
+                xmlData += `      <maxSpeed>${maxSpeed}</maxSpeed>\n`;
+                xmlData += `    </platform>\n`;
+            });
+            xmlData += '  </platforms>\n';
+            xmlData += '</radarData>';
+
+            // Create a Blob from the XML data and trigger download
+            const blob = new Blob([xmlData], { type: 'application/xml' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'radar_data.xml';
+            link.click();
         }
 
         function exportToJSON() {
-            alert('Export to JSON initiated.');
-        }
+            const jsonData = {
+                radars: committedRadarDatabase.map(radar => {
+                    const subrows = radarSubrows[radar.id] || [];
+                    return {
+                        ...radar,
+                        subrows
+                    };
+                }),
+                platforms: Array.from(document.querySelectorAll('#platformTableBody tr')).map(row => ({
+                    country: row.cells[1].innerText,
+                    platformName: row.cells[2].innerText,
+                    radarIds: row.cells[3].innerText.split(',').map(id => id.trim()),
+                    gunSize: row.cells[4].innerText,
+                    weight: row.cells[5].innerText,
+                    length: row.cells[6].innerText,
+                    crewSize: row.cells[7].innerText,
+                    maxSpeed: row.cells[8].innerText
+                }))
+            };
 
-        function addRadar() {
-            alert('Add Radar functionality initiated.');
-        }
+            const jsonString = JSON.stringify(jsonData, null, 2);
 
+            // Create a Blob from the JSON data and trigger download
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'radar_data.json';
+            link.click();
+        }
     </script>
 </body>
 </html>
